@@ -6,9 +6,13 @@ use core::ptr::write_volatile;
 use cortex_m::asm::nop;
 use cortex_m_rt::entry;
 use panic_halt as _;
+#[cfg(feature = "rtt")]
+use rtt_target::{rprintln, rtt_init_print};
 
 #[entry]
 fn main() -> ! {
+    #[cfg(feature = "rtt")]
+    rtt_init_print!();
     const GPIOD_BASE: u32 = 0x4002_0C00;
     const RCC_BASE: u32 = 0x4002_3800;
     const RCC_AHB1ENR: *mut u32 = (RCC_BASE + 0x30) as *mut u32;
@@ -28,11 +32,15 @@ fn main() -> ! {
             unsafe {
                 // Set pin 12 high
                 write_volatile(GPIOD_ODR, *GPIOD_ODR | (1 << PIN));
+                #[cfg(feature = "rtt")]
+                rprintln!("LED ON");
             }
         } else {
             unsafe {
                 // Set pin 12 low
                 write_volatile(GPIOD_ODR, *GPIOD_ODR & !(1 << PIN));
+                #[cfg(feature = "rtt")]
+                rprintln!("LED OFF");
             }
         }
         for _ in 0..100_000 {
