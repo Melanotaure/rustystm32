@@ -1,9 +1,12 @@
 #![no_std]
 #![no_main]
 
-use stm32_hal2 as hal;
+use stm32_hal2::{
+    clocks::Clocks,
+    gpio::{Pin, PinMode, Port},
+};
 
-use cortex_m::asm::nop;
+use cortex_m::delay::Delay;
 use cortex_m_rt::entry;
 use panic_halt as _;
 #[cfg(feature = "rtt")]
@@ -20,19 +23,24 @@ enum Led {
 fn main() -> ! {
     #[cfg(feature = "rtt")]
     rtt_init_print!();
-    let p = hal::pac::Peripherals::take().unwrap();
-    p.RCC.ahb1enr.write(|w| w.gpioden().enabled());
-    let mut pd15 = hal::gpio::Pin::new(hal::gpio::Port::D, 15, hal::gpio::PinMode::Output);
-    let mut pd14 = hal::gpio::Pin::new(hal::gpio::Port::D, 14, hal::gpio::PinMode::Output);
-    let mut pd13 = hal::gpio::Pin::new(hal::gpio::Port::D, 13, hal::gpio::PinMode::Output);
-    let mut pd12 = hal::gpio::Pin::new(hal::gpio::Port::D, 12, hal::gpio::PinMode::Output);
+    let cp = cortex_m::Peripherals::take().unwrap();
+
+    let clock_cfg = Clocks::default();
+    clock_cfg.setup().unwrap();
+
+    let mut delay = Delay::new(cp.SYST, clock_cfg.systick());
+
+    let mut pd15 = Pin::new(Port::D, 15, PinMode::Output);
+    let mut pd14 = Pin::new(Port::D, 14, PinMode::Output);
+    let mut pd13 = Pin::new(Port::D, 13, PinMode::Output);
+    let mut pd12 = Pin::new(Port::D, 12, PinMode::Output);
 
     let mut led_state = Led::D15;
     loop {
         match led_state {
             Led::D15 => {
                 #[cfg(feature = "rtt")]
-                rprintln!("D15");
+                rprintln!("Blue");
                 pd15.set_high();
                 pd14.set_low();
                 pd13.set_low();
@@ -41,7 +49,7 @@ fn main() -> ! {
             }
             Led::D14 => {
                 #[cfg(feature = "rtt")]
-                rprintln!("D14");
+                rprintln!("Red");
                 pd15.set_low();
                 pd14.set_high();
                 pd13.set_low();
@@ -50,7 +58,7 @@ fn main() -> ! {
             }
             Led::D13 => {
                 #[cfg(feature = "rtt")]
-                rprintln!("D13");
+                rprintln!("Orange");
                 pd15.set_low();
                 pd14.set_low();
                 pd13.set_high();
@@ -59,7 +67,7 @@ fn main() -> ! {
             }
             Led::D12 => {
                 #[cfg(feature = "rtt")]
-                rprintln!("D12");
+                rprintln!("Green");
                 pd15.set_low();
                 pd14.set_low();
                 pd13.set_low();
@@ -68,8 +76,6 @@ fn main() -> ! {
             }
         }
 
-        for _ in 0..100_000 {
-            nop();
-        }
+        delay.delay_ms(1000u32);
     }
 }
