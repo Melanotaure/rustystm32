@@ -35,44 +35,53 @@ fn main() -> ! {
     let mut pd13 = Pin::new(Port::D, 13, PinMode::Output);
     let mut pd12 = Pin::new(Port::D, 12, PinMode::Output);
 
+    let button = Pin::new(Port::A, 0, PinMode::Input);
+
     let mut led_state = Led::D15;
     loop {
+        if button.is_high() {
+            #[cfg(feature = "rtt")]
+            rprintln!("Button pressed");
+            pd15.set_low();
+            pd14.set_low();
+            pd13.set_low();
+            pd12.set_low();
+            match led_state {
+                Led::D15 => {
+                    led_state = Led::D14;
+                }
+                Led::D14 => {
+                    led_state = Led::D13;
+                }
+                Led::D13 => {
+                    led_state = Led::D12;
+                }
+                Led::D12 => {
+                    led_state = Led::D15;
+                }
+            }
+        }
+
         match led_state {
             Led::D15 => {
                 #[cfg(feature = "rtt")]
                 rprintln!("Blue");
-                pd15.set_high();
-                pd14.set_low();
-                pd13.set_low();
-                pd12.set_low();
-                led_state = Led::D14;
+                pd15.toggle();
             }
             Led::D14 => {
                 #[cfg(feature = "rtt")]
                 rprintln!("Red");
-                pd15.set_low();
-                pd14.set_high();
-                pd13.set_low();
-                pd12.set_low();
-                led_state = Led::D13;
+                pd14.toggle();
             }
             Led::D13 => {
                 #[cfg(feature = "rtt")]
                 rprintln!("Orange");
-                pd15.set_low();
-                pd14.set_low();
-                pd13.set_high();
-                pd12.set_low();
-                led_state = Led::D12;
+                pd13.toggle();
             }
             Led::D12 => {
                 #[cfg(feature = "rtt")]
                 rprintln!("Green");
-                pd15.set_low();
-                pd14.set_low();
-                pd13.set_low();
-                pd12.set_high();
-                led_state = Led::D15;
+                pd12.toggle();
             }
         }
 
