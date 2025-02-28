@@ -17,9 +17,9 @@ fn main() -> ! {
     const PIN: u32 = 15; // Blue LED
     unsafe {
         // Enable the clock for GPIOD
-        *RCC_AHB1ENR |= 1 << 3;
+        write_volatile(RCC_AHB1ENR, *RCC_AHB1ENR | (1 << 3));
         // Set pin 12 as output
-        *GPIOD_MODER |= 1 << (PIN * 2);
+        write_volatile(GPIOD_MODER, *GPIOD_MODER | (1 << (PIN * 2)));
     }
 
     let mut blink = true;
